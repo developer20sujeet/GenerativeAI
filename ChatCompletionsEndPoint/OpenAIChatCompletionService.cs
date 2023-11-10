@@ -24,15 +24,29 @@ namespace GenAI.ChatCompletionsEndPoint
         }
         public async Task<ChatCompletionResponse> ChatCompletionAsync()
         {
+           
             var requestBody = new
             {
                 model = _options.Model,
                 messages = new[]
                 {
-                    new { role = "system", content = "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair." },
-                    new { role = "user", content = "Compose a poem that explains the concept of recursion in programming." }
+                    /*
+                     * 
+                       -Role "system": 
+                                - This is typically used for sending instructions or setting the context for the AI model.
+                                - It might be used to specify the behavior, persona, or rules that the AI should follow while generating responses. 
+                                - This is equal to custome instrcution in chatGPT on the OpenAI website
+                           
+
+                        - role = "user"                             
+                             - This is the prompt that the AI will respond to, generating a completion that is a poem about recursion
+                    */
+
+                    new { role = "system", content = "Your are Data structure and Algorithms expert and you will help with Tricks and Tips of DSA" },
+                    new { role = "user", content = "Please give me interview note for Linked List DSA " }
                 }
             };
+
 
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -40,10 +54,15 @@ namespace GenAI.ChatCompletionsEndPoint
             try
             {
                 var response = await _httpClient.PostAsync(_options.Endpoint, content);
+
                 response.EnsureSuccessStatusCode();
+
                 var responseBody = await response.Content.ReadAsStringAsync();
+
                 var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
                 var chatCompletionResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(responseBody, options);
+
                 if (chatCompletionResponse == null)
                     throw new InvalidOperationException("Failed to deserialize the response.");
 
@@ -64,36 +83,3 @@ namespace GenAI.ChatCompletionsEndPoint
 }
 
 
-#region Json Response class
-
-public class ChatCompletionResponse
-{
-    public string Id { get; set; }
-    public string Object { get; set; }
-    public long Created { get; set; }
-    public string Model { get; set; }
-    public List<Choice> Choices { get; set; }
-    public Usage Usage { get; set; }
-}
-
-public class Choice
-{
-    public int Index { get; set; }
-    public Message Message { get; set; }
-    public string FinishReason { get; set; }
-}
-
-public class Message
-{
-    public string Role { get; set; }
-    public string Content { get; set; }
-}
-
-public class Usage
-{
-    public int PromptTokens { get; set; }
-    public int CompletionTokens { get; set; }
-    public int TotalTokens { get; set; }
-}
-
-#endregion
